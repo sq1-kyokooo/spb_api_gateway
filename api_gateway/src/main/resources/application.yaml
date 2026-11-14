@@ -1,0 +1,60 @@
+# API GATEWAY definition
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Si un microservicio también agrega headers CORS, evita duplicarlos
+          default-filters:
+            - DedupeResponseHeader=Access-Control-Allow-Origin Access-Control-Allow-Credentials, RETAIN_FIRST
+          routes:
+            #/api/users y /api/admin (gestión de usuarios)
+            - id: user-service
+              uri: http://${USER_SERVICE_HOST:localhost}:${USER_SERVICE_PORT:8861}
+              predicates:
+                - Path=/api/users/**,/api/admin/**
+              filters:
+                - StripPrefix=1
+
+            # /api/crud/products /api/products
+            - id: product-service
+              uri: http://${PRODUCT_SERVICE_HOST:localhost}:${PRODUCT_SERVICE_PORT:8862}
+              predicates:
+                - Path=/api/products/**,/api/crud/products/**
+              filters:
+                - StripPrefix=1
+
+            #/api/payments/user/** y /api/payments/contractor/**
+            - id: payment-service
+              uri: http://${PAYMENT_SERVICE_HOST:localhost}:${PAYMENT_SERVICE_PORT:8863}
+              predicates:
+                - Path=/api/payments/**
+              filters:
+                - StripPrefix=1
+
+            # vendedores
+            - id: vendor-service
+              uri: http://${VENDOR_SERVICE_HOST:localhost}:${VENDOR_SERVICE_PORT:8864}
+              predicates:
+                - Path=/api/vendor/**
+              filters:
+                - StripPrefix=1
+
+            # contratistas
+            - id: contractor-service
+              uri: http://${CONTRACTOR_SERVICE_HOST:localhost}:${CONTRACTOR_SERVICE_PORT:8865}
+              predicates:
+                - Path=/api/contractor/**
+              filters:
+                - StripPrefix=1
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: https://dev-vx0d4nhti2zb58wx.us.auth0.com/
+          audiences: https://api.ferreteria.com
+
+server:
+  port: 8081
